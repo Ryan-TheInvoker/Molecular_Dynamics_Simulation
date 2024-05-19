@@ -4,9 +4,9 @@
 #include <time.h>
 #include <string.h>
 
-#define PARTICLE_NUMBER 5
-#define BOX_WIDTH 10.0
-#define BOX_HEIGHT 10.0
+#define PARTICLE_NUMBER 150
+#define BOX_WIDTH 15.0
+#define BOX_HEIGHT 15.0
 #define DELTA_T 0.01
 #define KB_T 1.0  // increasing temperature will increase velocity
 #define PI 3.14159265358979323846
@@ -381,7 +381,7 @@ int main(int argc, const char * argv[]) {
 
    
 
-    int steps = 3000;  // Number of time steps to simulate !!This can be changed to a while 
+    int steps = 1500;  // Number of time steps to simulate !!This can be changed to a while 
     int i;
     for (i = 0; i < steps; i++) {
         

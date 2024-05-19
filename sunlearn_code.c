@@ -215,8 +215,9 @@ void writeenergies(double KE, double t, char filename[FIILENAMELENGTH]){
 }
 
 
-/* The next two functions are get the mathematica right.
- Please eventually do something else with this. */
+/* The next two functions are get the mathematica right.[Running] python -u "/home/ryan/University/Honours/Semester 1/Statistical Physics B 721/Term 2 Simulations/data_analysis.py"
+QApplication: invalid style override 'gtk2' passed, ignoring it.
+	Available styles: Windows, Fusion
 
 void tidyupmathematicafile(double pos[PARTICLES][DIM], char filename[FIILENAMELENGTH], double boxdims[DIM]){
     
