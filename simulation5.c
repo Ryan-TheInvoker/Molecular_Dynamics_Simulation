@@ -4,49 +4,24 @@
 #include <time.h>
 #include <string.h>
 
-#define PARTICLE_NUMBER 50
-#define BOX_WIDTH 20.0
-#define BOX_HEIGHT 0.0
+#define PARTICLE_NUMBER 3
+#define BOX_WIDTH 4
+#define BOX_HEIGHT 4
 #define DELTA_T 0.01
-#define KB_T 1.0  // increasing temperature will increase velocity
+#define KB_T 2  // increasing temperature will increase velocity
 #define PI 3.14159265358979323846
 #define FIILENAMELENGTH 100
 #define DIM 2
 #define MASS 1.0
 #define SIGMA 1.0
-#define EPSILON 1.0 
+#define EPSILON 5 
 #define DELTA 0.01
-//#define KB 1.38e-23
+#define KB 1.38e-23
 
 //Ercolessi "epsilon = 1 and sigma = 1"
 
 //Sigma: dictates where the potential is zero
 //Epsilon: the depth of the potential well ==> strength of the interactions
-
-
-//QUESTIONS 
-/* What should sigma and epsilon be?
-* Temperature?
-* Are we expecting the system to reach an equilibrium? --> Clustering?
-*/ 
-
-
-/*Read: 
-*
-*Note that the following parameters for the simulation we have not configured yet: temperatureinitial,  size of the time interval used in the integration algorithm, deltat,
-* is the time at which the simulation ends, having started at 0.0,
-*is an integer giving the number of integration steps between data writes,
-*/
-
-/* Phase 2 Simulation Methods: 
-*
-*/
-
-/*1) want to neglect forces from particles that are far away  (DONE)
-* 2) don't calculate pairs twice                       
-* 3) calculate potential energy and kinetic energy  (DONE)
-*/
-
 
 
 // Structure to hold particle data
@@ -248,22 +223,34 @@ double lennard_jones(double r, double rc){
     double sr12 = sr6 * sr6;
 
 
-    double trunc_prime = -24.0 * EPSILON * (2.0 * pow(SIGMA/ rc, 12) - pow(SIGMA / rc, 6)) / (rc); //why did we have 1/rc^2 
+    double trunc_prime = -24.0 * EPSILON * (2.0 * pow(SIGMA/ rc, 12) - pow(SIGMA / rc, 6)) / (rc); 
 
     potential_E += 4* EPSILON *(sr12 - sr6 - (pow((SIGMA/rc),12) - pow((SIGMA/rc),6)) )- r * trunc_prime;
 
-    //printf("trunc prime:%f");
-    //double forceMagnitude =  24 * EPSILON * (2 * sr12 / r - sr6 / r); //TODO: check this expression
-    //forceMagnitude += 24 * EPSILON * (2 * pow((SIGMA/rc),12) / rc -  pow((SIGMA/rc),6) / rc);   //trunctation expression
+
 
     double forceMagnitude = +24 * EPSILON* (2.0 * sr12 -sr6 )*(1/(r*r)) + trunc_prime * sqrt(1/(r*r));
-    //TODO: I think this is probably incredibly inefficent, calculating once is probably only necessary
+
 
     //virial -= forceMagnitude* r*r;
     return forceMagnitude;
 }
 
+double lennard_jones_potential(double r, double rc){
 
+    
+
+    double sr = SIGMA / r;
+    double sr2 = sr * sr;
+    double sr6 = sr2 * sr2 * sr2;
+    double sr12 = sr6 * sr6;
+
+
+    double trunc_prime = -24.0 * EPSILON * (2.0 * pow(SIGMA/ rc, 12) - pow(SIGMA / rc, 6)) / (rc * rc); 
+    potential_E += 4* EPSILON *(sr12 - sr6 - 4* EPSILON * (pow((SIGMA/rc),12) - pow((SIGMA/rc),6)) - r * trunc_prime);
+
+
+}
 
 
 void apply_boundary_conditions(int i) {
@@ -297,7 +284,7 @@ void calculate_new_forces_and_accelerations(int i) {
                 fx[i] += force_mag * dx; 
                 fy[i] += force_mag * dy; // think we must remove /r here
 
-                virial += fx[i]*dx + fy[i]*dy; // -=?
+                virial += fx[i]*dx + fy[i]*dy;
             }
         }
     }
@@ -350,6 +337,7 @@ void verlet(int i){
 
     particles[i].v_x *= beta;
     particles[i].v_y *= beta;
+
     kinetic_E += 0.5*MASS* (particles[i].v_x * particles[i].v_x  + particles[i].v_y * particles[i].v_y);
     // // Update velocities again with new accelerations
     //  particles[i].v_x += 0.5 * particles[i].a_y * DELTA_T;
@@ -359,7 +347,7 @@ void verlet(int i){
     
 
     
-
+    //adjustCenterOfMassVelocity();
     
 
 
@@ -370,7 +358,7 @@ void verlet(int i){
 
 void update_step(){
 
-    
+    kinetic_E = 0.0;
     for (int i = 0; i < PARTICLE_NUMBER; i++)
     {
         verlet(i);
@@ -420,7 +408,7 @@ void delete_old_files(const char *outputfilename) {
 
     snprintf(filename, sizeof(filename), "%s_TE_list.txt", outputfilename);
     remove(filename);
-    }
+}
 
 
 
@@ -446,16 +434,15 @@ void record_TP_data_point(double temperature, double pressure, char filename[FII
 *
 */
 double calculate_temperature() {
-    
+    clock_t start = clock();
     double total_kinetic_energy = 0.0;
     for (int i = 0; i < PARTICLE_NUMBER; i++) {
-
         double speed_squared = particles[i].v_x * particles[i].v_x + particles[i].v_y * particles[i].v_y;
         total_kinetic_energy += 0.5 * MASS * speed_squared;
     }
     return (2.0 * total_kinetic_energy) / (DIM * PARTICLE_NUMBER * KB_T);
 
-
+    
 }
 
 
@@ -463,8 +450,6 @@ double calculate_temperature() {
 *
 */
 double compute_pressure( double V) {
-
-
     // Calculate pressure using the virial equation of state
     printf("Virial = %f", virial);
     double pressure = (PARTICLE_NUMBER / V) * calculate_temperature()  + (virial / (DIM * V)) ;
@@ -487,16 +472,22 @@ void adjust_velocities( double factor) {
     }
 }
 
-void equilibrate_system(int steps, char filename[FIILENAMELENGTH] ) {
+void equilibrate_system_vid(int steps,char filename[FIILENAMELENGTH] ) {
     
     for (int k = 0; k < steps; k++) {
-        // Perform one MD step (function not provided, placeholder for your MD step implementation)
+        
         update_step();
         writepositions (filename);
     }
-    printf("Temp: %f",calculate_temperature());
 }
 
+void equilibrate_system(int steps) {
+    for (int k = 0; k < steps; k++) {
+        
+        update_step();
+        
+    }
+}
 
 
 // CALORIC DATA FUNCTIONS//
@@ -512,19 +503,19 @@ void write_caloric( char filename[FIILENAMELENGTH]){
     strcat(filenameupdated, "_TE_list.txt"); // data written to filename that is pure text
     
     TEfile = fopen(filenameupdated, "a");
-
-    fprintf(TEfile, "%f %f\n", calculate_temperature(), potential_E+kinetic_E);
+    printf("PE: %f",potential_E);
+    fprintf(TEfile, "%f %f\n", calculate_temperature(), potential_E);
     
     fclose(TEfile);
 
 
 }
 
-void caloric_data(int num_runs,int steps,char filename[FIILENAMELENGTH]){
+void caloric_data(int num_runs,int equ_steps,char filename[FIILENAMELENGTH]){
     
     for (int i = 0; i < num_runs; i++)
     {
-        equilibrate_system(500,filename);
+        equilibrate_system_vid(equ_steps,filename);
         write_caloric(filename);
         adjust_velocities(0.01);
     }
@@ -547,35 +538,36 @@ int main(int argc, const char * argv[]) {
 
    
 
-    int steps = 500;  // Number of time steps to simulate !!This can be changed to a while 
+    int steps = 1000;  // Number of time steps to simulate !!This can be changed to a while 
     int i;
     for (i = 0; i < steps; i++) {
         
         kinetic_E = 0.0;
         
 
+
         update_step();
         
-        
+        writepositions (outputfilename);
         write_KE ( i*DELTA_T, outputfilename);
         write_PE( i*DELTA_T,outputfilename);
-        writepositions (outputfilename);
         
     }
 
-    // int num_readings = 5;
+    // int num_readings = 10;
     
     // for (int j = 0; j < num_readings; j++)
     // {
     
-    //     equilibrate_system(500,outputfilename);
+    //     equilibrate_system(1500);
     //     record_TP_data_point(calculate_temperature(), compute_pressure(BOX_HEIGHT*BOX_WIDTH),outputfilename);
-        
-    //     adjust_velocities(0.03);
+
+    //     adjust_velocities(0.01);
     // }
     
+  
 
-    //caloric_data(10,500,outputfilename);
+    //caloric_data(20,1000,outputfilename);
 
     return 0;
 }

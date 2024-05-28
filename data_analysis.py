@@ -10,8 +10,8 @@ time = []
 kinetic_energy = []
 
 # Open the file and read the data
-if os.path.exists("sim4_KE_list.txt"):
-    with open("sim4_KE_list.txt", "r") as file:
+if os.path.exists("sim5_KE_list.txt"):
+    with open("sim5_KE_list.txt", "r") as file:
         for line in file:
             parts = line.split()
             if len(parts) == 2:  # Ensure there are two elements (time and kinetic energy)
@@ -27,7 +27,7 @@ if os.path.exists("sim4_KE_list.txt"):
     plt.grid(True)
     plt.legend()
 
-    plt.savefig("sim4_Kinetic_Energy_Plot.png", format='png', dpi=300)
+    plt.savefig("sim5_Kinetic_Energy_Plot.png", format='png', dpi=300)
     plt.show()
 
 
@@ -36,9 +36,9 @@ time = []
 potential_energy = []
 
 # Open the file and read the data
-if os.path.exists("sim4_PE_list.txt"):
+if os.path.exists("sim5_PE_list.txt"):
 
-    with open("sim4_PE_list.txt", "r") as file:
+    with open("sim5_PE_list.txt", "r") as file:
         for line in file:
             parts = line.split()
             if len(parts) == 2:  # Ensure there are two elements (time and kinetic energy)
@@ -54,7 +54,7 @@ if os.path.exists("sim4_PE_list.txt"):
     plt.grid(True)
     plt.legend()
 
-    plt.savefig("sim4_Potential_Energy_Plot.png", format='png', dpi=300)
+    plt.savefig("sim5_Potential_Energy_Plot.png", format='png', dpi=300)
     plt.show()
 
 
@@ -64,7 +64,7 @@ if os.path.exists("sim4_PE_list.txt"):
 # CALCULATE TOTAL ENERGY ##
 
 # Ensure kinetic and potential energy lists are the same length
-if os.path.exists("sim4_PE_list.txt") and os.path.exists("sim2_KE_list.txt"):
+if os.path.exists("sim5_PE_list.txt") and os.path.exists("sim5_KE_list.txt"):
     if len(kinetic_energy) != len(potential_energy):
         print("Error: Kinetic and Potential energy lists are of different lengths.")
         exit()
@@ -83,7 +83,7 @@ if os.path.exists("sim4_PE_list.txt") and os.path.exists("sim2_KE_list.txt"):
     plt.legend()
 
     # Save the plot to a file and display it
-    plt.savefig("sim4_Total_Energy_Plot.png", format='png', dpi=300)
+    plt.savefig("sim5_Total_Energy_Plot.png", format='png', dpi=300)
     plt.show()
 
 
@@ -91,9 +91,9 @@ if os.path.exists("sim4_PE_list.txt") and os.path.exists("sim2_KE_list.txt"):
 ## Pressure vs Temperature Plot ##
 
 # Constants
-PARTICLE_NUMBER = 200
-BOX_WIDTH = 40.0
-BOX_HEIGHT = 40.0
+PARTICLE_NUMBER = 100
+BOX_WIDTH = 20
+BOX_HEIGHT = 20 
 KB = 1.38e-23  # Boltzmann constant in J/K
 VOLUME = BOX_WIDTH * BOX_HEIGHT
 
@@ -124,12 +124,12 @@ def plot_temperature_vs_pressure(temperatures, pressures):
     plt.title('Pressure vs Temperature')
     plt.legend()
     plt.grid(True)
-    plt.savefig("sim4_TP_Plot.png", format='png', dpi=300)
+    plt.savefig("sim5_TP_Plot.png", format='png', dpi=300)
 
     plt.show()
 
-filename = 'sim4_TP_data.txt'
-if os.path.exists('sim4_TP_data.txt'):
+filename = 'sim5_TP_data.txt'
+if os.path.exists('sim5_TP_data.txt'):
     temperatures, pressures = read_data(filename)
     plot_temperature_vs_pressure(temperatures, pressures)
 
@@ -152,10 +152,10 @@ def read_caloric_curve_data(filename):
 
 def plot_caloric_curve(temperatures, internal_energies):
     plt.figure(figsize=(10, 6))
-    plt.plot(temperatures, internal_energies, 'o-', label='Caloric Curve')
+    plt.plot(temperatures, internal_energies, 'o', label='Caloric Curve')
     
     plt.xlabel('Temperature (T)')
-    plt.ylabel('Internal Energy (E)')
+    plt.ylabel('Potential Energy (E)')
     plt.title('Caloric Curve')
     plt.legend()
     plt.grid(True)
@@ -163,8 +163,8 @@ def plot_caloric_curve(temperatures, internal_energies):
 
     plt.show()
 
-# Update the filename as per your C code's output file naming convention
-filename = 'sim4_TE_list.txt'  # Replace 'your_filename' with the actual base filename used in your C code
+
+filename = 'sim5_TE_list.txt'  #
 if os.path.exists(filename):
     temperatures, internal_energies = read_caloric_curve_data(filename)
     plot_caloric_curve(temperatures, internal_energies)
@@ -173,7 +173,7 @@ if os.path.exists(filename):
 
 ##ANIMATION##
 
-# Function to read data
+
 def read_data(filename):
     with open(filename, 'r') as file:
         data = []
@@ -187,12 +187,12 @@ def read_data(filename):
 
 
 # Read the particle position data; here I have the file name attached manually
-data = read_data('sim4_particle_positions.csv') 
+data = read_data('sim5_particle_positions.csv') 
 
 # Create a figure and axis; note we MUST use same width and height as box
 fig, ax = plt.subplots()
-ax.set_xlim(0, 40)  
-ax.set_ylim(0, 40)
+ax.set_xlim(0, 4)  
+ax.set_ylim(0, 4)
 
 # Initial plot objects, setting up as blue circles
 lines, = ax.plot([], [], 'bo')
@@ -209,7 +209,7 @@ def animate(i):
     lines.set_data(x, y)  # Update the data of the plot 
     return lines,
 
-# Call the animator, pass the function and its parameters
+
 ani = FuncAnimation(fig, animate, init_func=init, frames=len(data), interval=10, blit=True)
 
 
